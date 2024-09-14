@@ -23,8 +23,8 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "500m"
-        volumeMounts:
-        - mountPath: /var/lib/mysql
+        volumeMounts: # volumeMounts is inside containers
+        - mountPath: /var/lib/mysql # Mount the volume inside the container
           name: vpro-db-data
         ports:
         - name: vprodb-port
@@ -35,11 +35,8 @@ spec:
             secretKeyRef:
               name: app-secret
               key: db-pass
-      volumes:
+      volumes: # volumes are defined at the pod level
       - name: vpro-db-data
         awsElasticBlockStore:
           volumeID: vol-0e926555b474953bb
           fsType: ext4
-        volumeMounts:
-        - name: vpro-db-data
-          mountPath: /var/lib/mysql
