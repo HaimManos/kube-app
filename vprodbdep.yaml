@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vprodb
+  labels:
+    app: vprodb # This label is going to be for our service definition file , so we are going to create a service of type Clsuter IP, and our
+                # service is goign to route the request to any pod that has this label, for DB Service.
+spec:
+  selector:
+    matchLabels:
+      app: vprodb
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: vprodb
+    spec:
+      containers:
+      - name: vprodb
+        image: haimmanos/vprofiledb:V1
+        volumeMounts:
+         - mountPath: /var/lib/mysql
+           name: vpro-db-data
+        ports:
+          - name: vprodb-port
+            containerPort: 3306
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: app-secret
+                key: db-pass
+        nodeSelector:
+          zone: us-east-1a
+        volumes:
+         - name: vpro-db-data
+           awsElasticBlockStore:
+            volumeID:  vol-0e926555b474953bb
+            fsType: ext4
+      initContainers:
+        - name: busybox
+          image: busybox:latest
+          args: ["rm", "-rf", "var/lib/mysql/lost+founds"]
+          volumeMounts:
+           - name: vpro-db-data
+             mountPath: /var/lib/mysql
+
