@@ -15,7 +15,7 @@ spec:
         app: vprodb
     spec:
       nodeSelector:
-        zone: us-east-1b
+        zone: us-east-1a
       containers:
       - name: vprodb
         image: haimmanos/vprofiledb:latest
@@ -40,10 +40,6 @@ spec:
         awsElasticBlockStore:
           volumeID: vol-0e926555b474953bb
           fsType: ext4
-      initContainers:
-      - name: busybox
-        image: busybox:latest
-        args: ["rm", "-rf", "/var/lib/mysql/lost+found"]
         volumeMounts:
         - name: vpro-db-data
           mountPath: /var/lib/mysql
