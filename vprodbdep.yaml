@@ -18,7 +18,7 @@ spec:
         zone: us-east-1a
       containers:
       - name: vprodb
-        image: haimmanos/vprofiledb:V1
+        image: haimmanos/vprofiledb:latest
         volumeMounts:
           - mountPath: /var/lib/mysql
             name: vpro-db-data
