@@ -15,7 +15,7 @@ spec:
         app: vprodb
     spec:
       nodeSelector:
-        zone: us-east-1a
+        zone: us-east-1b
       containers:
       - name: vprodb
         image: haimmanos/vprofiledb:latest
