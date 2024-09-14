@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: vprodb
   labels:
-    app: vprodb 
+    app: vprodb
 spec:
   selector:
     matchLabels:
@@ -19,18 +19,22 @@ spec:
       containers:
       - name: vprodb
         image: haimmanos/vprofiledb:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
         volumeMounts:
-          - mountPath: /var/lib/mysql
-            name: vpro-db-data
+        - mountPath: /var/lib/mysql
+          name: vpro-db-data
         ports:
-          - name: vprodb-port
-            containerPort: 3306
+        - name: vprodb-port
+          containerPort: 3306
         env:
-          - name: MYSQL_ROOT_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: app-secret
-                key: db-pass
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: db-pass
       volumes:
       - name: vpro-db-data
         awsElasticBlockStore:
@@ -41,5 +45,5 @@ spec:
         image: busybox:latest
         args: ["rm", "-rf", "/var/lib/mysql/lost+found"]
         volumeMounts:
-          - name: vpro-db-data
-            mountPath: /var/lib/mysql
+        - name: vpro-db-data
+          mountPath: /var/lib/mysql
