@@ -5,7 +5,7 @@ metadata:
   labels:
     app: vprodb
 spec:
-  replicas: 1
+  replicas: 1 # Correct placement of replicas
   selector:
     matchLabels:
       app: vprodb
@@ -14,6 +14,8 @@ spec:
       labels:
         app: vprodb
     spec:
+      nodeSelector: # Node selector under spec, not containers
+        topology.kubernetes.io/zone: us-east-1a
       containers:
       - name: vprodb
         image: haimmanos/vprofiledb:latest
@@ -35,24 +37,12 @@ spec:
         volumeMounts:
         - mountPath: /var/lib/mysql
           name: vpro-db-data
-
-        # Adding lifecycle under the container's spec, not pod spec
-        lifecycle:
-          preStop:
-            exec:
-              command: ["/bin/sh", "-c", "sleep 10"]
-
-      volumes:
+      volumes: # Volumes should be under spec, not containers
       - name: vpro-db-data
         awsElasticBlockStore:
           volumeID: vol-01b6b93aa5f221bd9
           fsType: ext4
 
-      # NodeSelector should be placed inside the template spec
-      nodeSelector:
-        topology.kubernetes.io/zone: us-east-1a
-
-      # Tolerations and affinity should also be inside the template spec
       tolerations:
       - key: "node-role.kubernetes.io/control-plane"
         operator: "Exists"
@@ -61,13 +51,3 @@ spec:
         operator: "Exists"
         effect: "NoExecute"
         tolerationSeconds: 300
-
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: topology.kubernetes.io/zone
-                operator: In
-                values:
-                - us-east-1a # Adjust to your EBS volume's availability zone
