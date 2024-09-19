@@ -25,7 +25,7 @@ spec:
             memory: "256Mi"
             cpu: "250m"
           limits:
-            memory: "512i"
+            memory: "512Mi"
             cpu: "500m"
         ports:
         - name: vprodb-port
