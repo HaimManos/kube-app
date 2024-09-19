@@ -22,10 +22,10 @@ spec:
           name: vpro-db-data
         resources:
           requests:
-            memory: "64Mi"
+            memory: "256Mi"
             cpu: "250m"
           limits:
-            memory: "128Mi"
+            memory: "512i"
             cpu: "500m"
         ports:
         - name: vprodb-port
