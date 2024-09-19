@@ -46,15 +46,28 @@ spec:
       initContainers:
       - name: busybox
         image: busybox:latest
+        securityContext:
+          runAsUser: 0 # Ensures the init container runs as root
         args:
         - sh
         - -c
         - |
+          echo "Checking directory permissions...";
+          ls -ld /var/lib/mysql;
+
+          # Test if we can create a file in the directory
+          touch /var/lib/mysql/testfile || echo "Failed to create test file in /var/lib/mysql";
+
+          # If the directory exists, attempt to delete its contents
           if [ -d /var/lib/mysql ]; then
-            rm -rf /var/lib/mysql;
+            echo "Directory exists, attempting to delete files...";
+            rm -rf /var/lib/mysql/* || echo "Failed to delete contents of /var/lib/mysql";
           else
             echo "Directory /var/lib/mysql does not exist, skipping deletion";
           fi
+
+          # Check if the directory is empty after deletion
+          ls -la /var/lib/mysql;
         volumeMounts:
         - name: vpro-db-data
           mountPath: /var/lib/mysql
