@@ -19,11 +19,11 @@ spec:
         image: haimmanos/vprofiledb:latest
         resources:
           limits:
-            cpu: "500m"
             memory: "512Mi"
+            cpu: "500m"
           requests:
-            cpu: "250m"
             memory: "256Mi"
+            cpu: "250m"
         ports:
         - containerPort: 3306
         env:
@@ -36,6 +36,12 @@ spec:
         - mountPath: /var/lib/mysql
           name: vpro-db-data
 
+        # Adding lifecycle under the container's spec, not pod spec
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 10"]
+
       initContainers:
       - name: busybox
         image: busybox:latest
@@ -47,18 +53,11 @@ spec:
           volumeID: vol-0a0959cde3882f55f
           fsType: ext4
 
-      # Node Affinity for ensuring the pod is deployed in the same zone as the volume
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: topology.kubernetes.io/zone
-                operator: In
-                values:
-                - us-east-1a # Availability zone of your EBS volume
+      # NodeSelector should be placed inside the template spec
+      nodeSelector:
+        topology.kubernetes.io/zone: us-east-1a
 
-      # Tolerations for control-plane taints and node readiness issues
+      # Tolerations and affinity should also be inside the template spec
       tolerations:
       - key: "node-role.kubernetes.io/control-plane"
         operator: "Exists"
@@ -68,11 +67,12 @@ spec:
         effect: "NoExecute"
         tolerationSeconds: 300
 
-      # Adding a lifecycle hook to handle attachment delays
-      lifecycle:
-        preStop:
-          exec:
-            command: ["/bin/sh", "-c", "sleep 10"]
-
-  nodeSelector:
-    zone: us-east-1a # Ensure the pod is scheduled in the correct zone
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: topology.kubernetes.io/zone
+                operator: In
+                values:
+                - us-east-1a # Adjust to your EBS volume's availability zone
