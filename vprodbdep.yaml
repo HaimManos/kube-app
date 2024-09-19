@@ -50,7 +50,7 @@ spec:
       volumes:
       - name: vpro-db-data
         awsElasticBlockStore:
-          volumeID: vol-0a0959cde3882f55f
+          volumeID: vol-01b6b93aa5f221bd9
           fsType: ext4
 
       # NodeSelector should be placed inside the template spec
