@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vproapp
+  labels:
+    app: vproapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vproapp
+  template:
+    metadata:
+      labels:
+        app: vproapp
+    spec:
+      containers:
+      - name: vproapp
+        image: haimmanos/vprofileapp:latest
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        ports:
+        - name: vproapp-port
+          containerPort: 8080
+
+        # Kubernetes Health Checks (Liveness and Readiness Probes)
+        # Readiness Probe:
+        # This probe checks if the container is ready to serve traffic.
+        # Kubernetes will not send traffic to this container until the probe passes.
+        readinessProbe:
+          httpGet:
+            path: / # Path to check (can be any HTTP endpoint your app provides)
+            port: 8080 # Port to check
+          initialDelaySeconds: 10 # Delay before the first check (in seconds)
+          periodSeconds: 5 # Interval between checks (in seconds)
+
+        # Liveness Probe:
+        # This probe checks if the container is still running.
+        # If this probe fails, Kubernetes will restart the container.
+        livenessProbe:
+          httpGet:
+            path: / # Path to check for liveness
+            port: 8080 # Port to check
+          initialDelaySeconds: 20 # Delay before the first check (in seconds)
+          periodSeconds: 10 # Interval between liveness checks (in seconds)
+
+      # Init Containers: Wait for dependencies to be ready
+      initContainers:
+      - name: init-mydb
+        image: busybox
+        command: ['sh', '-c', 'until nslookup vprodb; do echo waiting for vprodb; sleep 2; done;']
+      - name: init-memcache
+        image: busybox
+        command: ['sh', '-c', 'until nslookup vprocache01; do echo waiting for vprocache01; sleep 2; done;']
