@@ -42,11 +42,6 @@ spec:
             exec:
               command: ["/bin/sh", "-c", "sleep 10"]
 
-      initContainers:
-      - name: busybox
-        image: busybox:latest
-        command: ['sh', '-c', 'until nslookup vprodb; do echo waiting for vprodb; sleep 2; done;']
-
       volumes:
       - name: vpro-db-data
         awsElasticBlockStore:
