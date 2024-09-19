@@ -5,10 +5,10 @@ metadata:
   labels:
     app: vprodb
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: vprodb
-  replicas: 1
   template:
     metadata:
       labels:
@@ -17,57 +17,62 @@ spec:
       containers:
       - name: vprodb
         image: haimmanos/vprofiledb:latest
-        volumeMounts:
-        - mountPath: /var/lib/mysql
-          name: vpro-db-data
         resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
           limits:
-            memory: "512Mi"
             cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
         ports:
-        - name: vprodb-port
-          containerPort: 3306
+        - containerPort: 3306
         env:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
               name: app-secret
               key: db-pass
-      nodeSelector:
-        zone: us-east-1a
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: vpro-db-data
+
+      initContainers:
+      - name: busybox
+        image: busybox:latest
+        command: ['sh', '-c', 'until nslookup vprodb; do echo waiting for vprodb; sleep 2; done;']
+
       volumes:
       - name: vpro-db-data
         awsElasticBlockStore:
           volumeID: vol-0a0959cde3882f55f
           fsType: ext4
-      initContainers:
-      - name: busybox
-        image: busybox:latest
-        securityContext:
-          runAsUser: 0 # Ensures the init container runs as root
-        args:
-        - sh
-        - -c
-        - |
-          echo "Checking directory permissions...";
-          ls -ld /var/lib/mysql;
 
-          # Test if we can create a file in the directory
-          touch /var/lib/mysql/testfile || echo "Failed to create test file in /var/lib/mysql";
+      # Node Affinity for ensuring the pod is deployed in the same zone as the volume
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: topology.kubernetes.io/zone
+                operator: In
+                values:
+                - us-east-1a # Availability zone of your EBS volume
 
-          # If the directory exists, attempt to delete its contents
-          if [ -d /var/lib/mysql ]; then
-            echo "Directory exists, attempting to delete files...";
-            rm -rf /var/lib/mysql/* || echo "Failed to delete contents of /var/lib/mysql";
-          else
-            echo "Directory /var/lib/mysql does not exist, skipping deletion";
-          fi
+      # Tolerations for control-plane taints and node readiness issues
+      tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "node.kubernetes.io/not-ready"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300
 
-          # Check if the directory is empty after deletion
-          ls -la /var/lib/mysql;
-        volumeMounts:
-        - name: vpro-db-data
-          mountPath: /var/lib/mysql
+      # Adding a lifecycle hook to handle attachment delays
+      lifecycle:
+        preStop:
+          exec:
+            command: ["/bin/sh", "-c", "sleep 10"]
+
+  nodeSelector:
+    zone: us-east-1a # Ensure the pod is scheduled in the correct zone
