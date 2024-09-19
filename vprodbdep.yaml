@@ -37,7 +37,7 @@ spec:
         zone: us-east-1a
       volumes:
       - name: vpro-db-data
-        awsElasticBlockerStore:
+        awsElasticBlockStore:
           volumeID: vol-0a0959cde3882f55f
           fsType: ext4
       initContainers:
