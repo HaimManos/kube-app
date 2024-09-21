@@ -40,7 +40,7 @@ spec:
       volumes: # Volumes should be under spec, not containers
       - name: vpro-db-data
         awsElasticBlockStore:
-          volumeID: vol-01b6b93aa5f221bd9
+          volumeID: vol-00cd0abd20ae2f925
           fsType: ext4
 
       tolerations:
