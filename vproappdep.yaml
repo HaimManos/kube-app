@@ -46,11 +46,3 @@ spec:
           initialDelaySeconds: 20 # Delay before the first check (in seconds)
           periodSeconds: 10 # Interval between liveness checks (in seconds)
 
-      # Init Containers: Wait for dependencies to be ready
-      initContainers:
-      - name: init-mydb
-        image: busybox
-        command: ['sh', '-c', 'until nslookup vprodb; do echo waiting for vprodb; sleep 2; done;']
-      - name: init-memcache
-        image: busybox
-        command: ['sh', '-c', 'until nslookup vprocache01; do echo waiting for vprocache01; sleep 2; done;']
